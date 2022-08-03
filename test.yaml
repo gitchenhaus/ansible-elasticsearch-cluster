@@ -1,0 +1,56 @@
+- hosts: master_node
+  roles:
+    - role: elastic.elasticsearch
+  vars:
+    es_data_dirs:
+      - "/home/elasticsearch"
+    es_heap_size: "4g"
+    es_config:
+      cluster.name: "rexbet-cluster"
+      cluster.initial_master_nodes: "master_node"
+      discovery.seed_hosts: "192.168.1.191:9300"
+      http.host: 0.0.0.0
+      http.port: 9200
+      node.data: false
+      node.master: true
+      transport.host: 0.0.0.0
+      transport.port: 9300
+      bootstrap.memory_lock: false
+
+- hosts: data_node_1
+  roles:
+    - role: elastic.elasticsearch
+  vars:
+    es_data_dirs:
+      - "/home/elasticsearch"
+    es_heap_size: "16g"
+    es_config:
+      cluster.name: "rexbet-cluster"
+      cluster.initial_master_nodes: "master_node"
+      discovery.seed_hosts: "192.168.1.191:9300"
+      http.host: 0.0.0.0
+      http.port: 9200
+      node.data: true
+      node.master: false
+      transport.host: 0.0.0.0
+      transport.port: 9300
+      bootstrap.memory_lock: false
+
+- hosts: data_node_2
+  roles:
+    - role: elastic.elasticsearch
+  vars:
+    es_data_dirs:
+      - "/home/elasticsearch"
+    es_heap_size: "16g"
+    es_config:
+      cluster.name: "rexbet-cluster"
+      cluster.initial_master_nodes: "master_node"
+      discovery.seed_hosts: "192.168.1.191:9300"
+      http.host: 0.0.0.0
+      http.port: 9200
+      node.data: true
+      node.master: false
+      transport.host: 0.0.0.0
+      transport.port: 9300
+      bootstrap.memory_lock: false
