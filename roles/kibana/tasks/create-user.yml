@@ -1,0 +1,54 @@
+---
+- name: Create Role readonly_dashboard
+  uri:
+    url: http://{{es_url}}:{{es_port}}/_security/role/{{readonly_role_name}}
+    user: "elastic"
+    password: "{{ es_password }}"
+    force_basic_auth: yes
+    method: PUT
+    status_code: 204
+    headers:
+      kbn-xsrf: reporting
+      Content-Type: application/json
+    body:
+      '{
+        "elasticsearch":{
+          "cluster":[],"indices":[{"names":["{{ readonly_role_read_index }}"],"privileges":["read"]}],"run_as":[]
+          
+        },
+        "kibana":[
+          {"spaces":["*"],"base":[],"feature":{"discover":["read"],"dashboard":["read"]}}
+        ]
+      }'
+    body_format: json
+  register: _result
+  until: _result.status == 204
+  retries: 300 # 60 * 5 seconds = 5 minutes
+  delay: 5 # Every 5 seconds
+
+- name: debug uri
+  debug:
+      msg: http://{{es_url}}:{{es_port}}/_security/user/{{ item.username }}
+  with_items: "{{ kibana_users }}"
+
+- name: Create User kibana_monitoring_users
+  uri:
+    url: http://{{es_url}}:{{es_port}}/_security/user/{{ item.username }}
+    user: "elastic"
+    password: "{{ es_password }}"
+    force_basic_auth: yes
+    method: POST
+    headers:
+      kbn-xsrf: reporting
+      Content-Type: application/json
+    body:
+      '{
+        "email":     "{{ item.username }}@localhost",
+        "username":  "{{ item.username }}",
+        "full_name": "{{ item.username }}",
+        "roles":     ["{{item.role}}"],
+        "enabled":   true,
+        "password":  "{{ item.password }}"
+      }'
+    body_format: json
+  with_items: "{{kibana_users}}"

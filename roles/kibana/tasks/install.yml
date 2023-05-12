@@ -1,0 +1,76 @@
+---
+- name:  Reset kibana_system password
+  become: true
+  expect:
+    command: /usr/share/elasticsearch/bin/elasticsearch-reset-password -i -u kibana_system
+    responses:
+        'Please confirm that you would like to continue \[y/N\]': "y"
+        'Enter password for [\w\W]+:': "{{es_password}}"
+        'Re-enter password for [\w\W]+:': "{{es_password}}"
+
+- name: Add kibana repository into sources list
+  apt:
+    deb: "{{ kibana_apt_repository_url }}"
+
+- name: Unhold kibana
+  dpkg_selections:
+    name: kibana
+    selection: install
+
+- name: Install kibana
+  apt:
+    name: kibana={{kibana_version}}
+    state: present
+    update_cache: true
+
+- name: Hold kibana
+  dpkg_selections:
+    name: kibana
+    selection: hold
+
+- name: Adjust kibana setting
+  become: true
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: "{{ item.regex }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regex: '^#server.host:.*',line: 'server.host: "0.0.0.0"' }
+    - { regex: '^#server.port: 5601',line: 'server.port: {{kibana_port}}' }
+    - { regex: '^#elasticsearch.username: "kibana_system"',line: 'elasticsearch.username: "kibana_system"' }
+
+- name: Create kibana directory
+  become: true
+  file:
+    path: '/etc/systemd/system/kibana.service.d/'
+    state: directory
+    owner: kibana
+    group: kibana
+    mode: '1755'
+
+- name: Copy kibana override.conf
+  become: true
+  template: 
+    src:  override_conf.j2
+    dest: /etc/systemd/system/kibana.service.d/override.conf
+    owner: kibana
+    group: kibana
+
+- name: Setup elasticsearch.password in kibana
+  become: true
+  expect:
+    command: /usr/share/kibana/bin/kibana-keystore add elasticsearch.password
+    responses:
+        'Enter value for elasticsearch.password:': "{{es_password}}"
+
+- name: Start Kibana service
+  become: true
+  systemd:
+    name: kibana
+    state: started
+    daemon_reload: yes
+    enabled: yes
+
+- name: Install kibana plugin
+  become: true
+  shell: /usr/share/kibana/bin/kibana-plugin  install "{{kibana_plugin_url}}/{{kibana_plugin_zip}}"

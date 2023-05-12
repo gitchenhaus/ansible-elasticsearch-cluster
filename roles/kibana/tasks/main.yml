@@ -1,0 +1,5 @@
+---
+- name: Install kibana
+  include: install.yml
+  when: 
+  - inventory_hostname in groups['kibana']

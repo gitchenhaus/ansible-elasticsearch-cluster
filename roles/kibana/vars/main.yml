@@ -1,0 +1,5 @@
+---
+kibana_version: '8.6.2'
+kibana_apt_repository_url: "https://artifacts.elastic.co/downloads/kibana/kibana-{{ kibana_version }}-amd64.deb"
+kibana_plugin_url: "https://github.com/fbaligand/kibana-enhanced-table/releases/download/v1.13.3"
+kibana_plugin_zip: "enhanced-table-1.13.3_8.6.2.zip"

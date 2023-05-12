@@ -1,0 +1,30 @@
+---
+
+- name: Unhold elasticsearch
+  dpkg_selections:
+    name: elasticsearch
+    selection: install
+
+- name: Unhold kibana
+  dpkg_selections:
+    name: kibana
+    selection: install
+
+- name: Remove kibana and elasticsearch
+  become: true
+  apt:
+    name: ['kibana', 'elasticsearch']
+    state: absent
+    purge: yes
+
+- name: Remove folder
+  become: true
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{es_base_data_dir}}"
+    - /etc/elasticsearch
+    - /etc/kibana
+    - /etc/systemd/system/kibana.service.d/
+    - /etc/systemd/system/elasticsearch.service.d/

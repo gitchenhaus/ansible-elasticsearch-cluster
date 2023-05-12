@@ -1,0 +1,80 @@
+---
+- name: Create Policy
+  uri:
+    url: http://{{es_url}}:{{es_port}}/_ilm/policy/{{item.policy_name}}
+    user: "elastic"
+    password: "{{ es_password }}"
+    force_basic_auth: no
+    method: PUT
+    status_code: 200
+    headers:
+      Content-Type: application/json
+    body:
+      '{
+        "policy": {
+          "phases": {
+            "warm": {
+             "min_age": "{{item.warm_day}}",
+              "actions": {
+                "forcemerge": {
+                  "max_num_segments": 1
+                }
+              }
+            },
+            "cold": {
+                "min_age": "{{item.cold_day}}",
+                "actions": {
+                  "set_priority": {
+                    "priority": 0
+                  },
+                  "freeze": {},
+                  "allocate": {
+                    "require": {
+                      "data": "cold"
+                    }
+                  }
+                }
+            },
+            "delete": {
+              "min_age": "{{item.delete_day}}",
+              "actions": {
+                "delete": {}
+              }
+            }
+          }
+        }
+      }'
+    body_format: json
+  register: _result
+  until: _result.status == 200
+  retries: 300 # 60 * 5 seconds = 5 minutes
+  delay: 5 # Every 5 seconds
+  with_items: "{{index_life_cycle}}"
+
+
+- name: Create IndexTemplate
+  uri:
+    url: http://{{es_url}}:{{es_port}}/_template/{{item.index_template}}
+    user: "elastic"
+    password: "{{ es_password }}"
+    force_basic_auth: no
+    method: PUT
+    headers:
+      Content-Type: application/json
+    body:
+      '{
+        "index_patterns" : [
+          "{{item.index_patterns}}"
+        ],
+        "settings" : {
+          "index" : {
+            "lifecycle" : {
+              "name" : "{{item.policy_name}}"
+            },
+            "number_of_shards" : "1",
+            "number_of_replicas" : "0"
+          }
+        }
+      }'
+    body_format: json
+  with_items: "{{index_life_cycle}}"

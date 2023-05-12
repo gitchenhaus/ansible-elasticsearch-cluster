@@ -1,0 +1,7 @@
+- hosts: kibana
+  any_errors_fatal: '{{ any_errors_fatal | default(true) }}'
+  roles:
+    - kibana
+  vars:
+    es_password: pass.123
+    kibana_port: 5601
