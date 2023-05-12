@@ -2,55 +2,54 @@
   roles:
     - role: elastic.elasticsearch
   vars:
+    es_version: 8.6.2
+    es_api_basic_auth_username: elastic
+    es_api_basic_auth_password: pass.123
+    es_enable_http_ssl: false
+    es_enable_transport_ssl: true
+    es_ssl_keystore: "certs/my-ca.p12"
+    es_ssl_truststore: "certs/my-keystore.p12"
+    es_ssl_keystore_password: ""
+    es_ssl_truststore_password: ""
     es_data_dirs:
       - "/home/elasticsearch"
     es_heap_size: "4g"
     es_config:
       cluster.name: "rexbet-cluster"
       cluster.initial_master_nodes: "master_node"
-      discovery.seed_hosts: "192.168.1.191:9300"
+      discovery.seed_hosts: "10.140.0.51:9300"
       http.host: 0.0.0.0
       http.port: 9200
-      node.data: false
-      node.master: true
+      node.roles: [ master , remote_cluster_client ]
       transport.host: 0.0.0.0
       transport.port: 9300
       bootstrap.memory_lock: false
+      xpack.monitoring.collection.enabled: true
 
 - hosts: data_node_1
   roles:
     - role: elastic.elasticsearch
   vars:
+    es_version: 8.6.2
+    es_api_basic_auth_username: elastic
+    es_api_basic_auth_password: pass.123
+    es_enable_http_ssl: false
+    es_enable_transport_ssl: true
+    es_ssl_keystore: "certs/my-ca.p12"
+    es_ssl_truststore: "certs/my-keystore.p12"
+    es_ssl_keystore_password: ""
+    es_ssl_truststore_password: ""
     es_data_dirs:
       - "/home/elasticsearch"
-    es_heap_size: "16g"
+    es_heap_size: "4g"
     es_config:
       cluster.name: "rexbet-cluster"
       cluster.initial_master_nodes: "master_node"
-      discovery.seed_hosts: "192.168.1.191:9300"
+      discovery.seed_hosts: "10.140.0.51:9300"
+      node.roles: [ data , remote_cluster_client ]
       http.host: 0.0.0.0
       http.port: 9200
-      node.data: true
-      node.master: false
       transport.host: 0.0.0.0
       transport.port: 9300
       bootstrap.memory_lock: false
-
-- hosts: data_node_2
-  roles:
-    - role: elastic.elasticsearch
-  vars:
-    es_data_dirs:
-      - "/home/elasticsearch"
-    es_heap_size: "16g"
-    es_config:
-      cluster.name: "rexbet-cluster"
-      cluster.initial_master_nodes: "master_node"
-      discovery.seed_hosts: "192.168.1.191:9300"
-      http.host: 0.0.0.0
-      http.port: 9200
-      node.data: true
-      node.master: false
-      transport.host: 0.0.0.0
-      transport.port: 9300
-      bootstrap.memory_lock: false
+      xpack.monitoring.collection.enabled: true
